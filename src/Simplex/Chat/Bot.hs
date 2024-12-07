@@ -22,6 +22,10 @@ import Simplex.Chat.Store
 import Simplex.Chat.Types (Contact (..), ContactId, IsContact (..), User (..))
 import Simplex.Messaging.Encoding.String (strEncode)
 import System.Exit (exitFailure)
+import Simplex.Messaging.Agent.Protocol
+import Simplex.Chat.Types
+import Control.Exception
+import Data.Maybe (Maybe(Nothing))
 
 chatBotRepl :: String -> (Contact -> String -> IO String) -> User -> ChatController -> IO ()
 chatBotRepl welcome answer _user cc = do
@@ -93,3 +97,30 @@ printLog cc level s
 
 contactInfo :: Contact -> String
 contactInfo Contact {contactId, localDisplayName} = T.unpack localDisplayName <> " (" <> show contactId <> ")"
+
+sendContactInvatation :: ChatController -> AConnectionRequestUri ->  IO ()
+sendContactInvatation cc invatationLink= do 
+  let cmd = Connect False (pure invatationLink)
+  sendChatCmd cc cmd >>= \case 
+    CRSentConfirmation {} -> print "Invatation sent"
+    CRSentInvitation {} -> print "Invatation sent"
+    r -> putStrLn $ "Invatation sending error" <> show r
+
+createActiveUser :: ChatController -> Profile -> IO User
+createActiveUser cc newUserProfile = do
+  let profile = Just newUserProfile
+  sendChatCmd cc (CreateActiveUser NewUser {profile, pastTimestamp = False}) >>= \case
+    CRActiveUser user -> pure user
+    _ -> fail "Can't create profile"
+
+setCCActiveUser :: ChatController -> UserId -> IO ()
+setCCActiveUser cc uid = do
+  sendChatCmd cc (APISetActiveUser uid Nothing) >>= \case
+    CRActiveUser user -> pure ()
+    er -> fail $ show er
+
+getContactList :: ChatController -> IO [Contact]
+getContactList cc = do
+    sendChatCmd cc ListContacts >>= \case
+      CRContactsList {contacts = contactList} -> return contactList
+      _ -> fail "Can't get contacts"
