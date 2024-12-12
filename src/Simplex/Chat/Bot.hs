@@ -97,6 +97,9 @@ contactRef = ChatRef CTDirect . contactId'
 textMsgContent :: String -> MsgContent
 textMsgContent = MCText . T.pack
 
+textMsgContent' :: T.Text -> MsgContent
+textMsgContent' = MCText
+
 printLog :: ChatController -> ChatLogLevel -> String -> IO ()
 printLog cc level s
   | logLevel (config cc) <= level = putStrLn s
