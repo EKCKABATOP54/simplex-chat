@@ -77,6 +77,13 @@ sendComposedMessage' cc ctId quotedItemId msgContent = do
     CRNewChatItems {} -> printLog cc CLLInfo $ "sent message to contact ID " <> show ctId
     r -> putStrLn $ "unexpected send message response: " <> show r
 
+sendComposedMessage'' :: ChatController -> ChatRef -> Maybe ChatItemId -> MsgContent -> IO ()
+sendComposedMessage'' cc chatRef quotedItemId msgContent = do
+  let cm = ComposedMessage {fileSource = Nothing, quotedItemId, msgContent}
+  sendChatCmd cc (APISendMessages chatRef False Nothing (cm :| [])) >>= \case
+    CRNewChatItems {} -> printLog cc CLLInfo $ "sent message to chat" <> show chatRef
+    r -> putStrLn $ "unexpected send message response: " <> show r
+
 deleteMessage :: ChatController -> Contact -> ChatItemId -> IO ()
 deleteMessage cc ct chatItemId = do
   let cmd = APIDeleteChatItem (contactRef ct) [chatItemId] CIDMInternal
