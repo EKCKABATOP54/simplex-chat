@@ -23,6 +23,7 @@ import Simplex.Messaging.Encoding.String (strEncode)
 import System.Exit (exitFailure)
 import Simplex.Messaging.Agent.Protocol
 import Simplex.Chat.Types
+import Data.Int (Int64)
 
 chatBotRepl :: String -> (Contact -> String -> IO String) -> User -> ChatController -> IO ()
 chatBotRepl welcome answer _user cc = do
@@ -137,3 +138,9 @@ createGroup cc groupProfile =
   sendChatCmd cc (NewGroup False groupProfile) >>= \case
     CRGroupCreated _ groupInfo -> return groupInfo
     _ -> fail "Can't create group"
+
+getGroupInfo :: ChatController -> Int64 -> IO GroupInfo
+getGroupInfo cc gId =
+  sendChatCmd cc (APIGroupInfo gId) >>= \case
+    CRGroupInfo {groupInfo = gInfo} -> return gInfo
+    _ -> fail "Can't get group info"
