@@ -19,13 +19,10 @@ import Simplex.Chat.Messages
 import Simplex.Chat.Messages.CIContent
 import Simplex.Chat.Protocol (MsgContent (..))
 import Simplex.Chat.Store
-import Simplex.Chat.Types (Contact (..), ContactId, IsContact (..), User (..))
 import Simplex.Messaging.Encoding.String (strEncode)
 import System.Exit (exitFailure)
 import Simplex.Messaging.Agent.Protocol
 import Simplex.Chat.Types
-import Control.Exception
-import Data.Maybe (Maybe(Nothing))
 
 chatBotRepl :: String -> (Contact -> String -> IO String) -> User -> ChatController -> IO ()
 chatBotRepl welcome answer _user cc = do
@@ -126,7 +123,7 @@ createActiveUser cc newUserProfile = do
 setCCActiveUser :: ChatController -> UserId -> IO ()
 setCCActiveUser cc uid = do
   sendChatCmd cc (APISetActiveUser uid Nothing) >>= \case
-    CRActiveUser user -> pure ()
+    CRActiveUser _ -> pure ()
     er -> fail $ show er
 
 getContactList :: ChatController -> IO [Contact]
@@ -134,3 +131,9 @@ getContactList cc = do
     sendChatCmd cc ListContacts >>= \case
       CRContactsList {contacts = contactList} -> return contactList
       _ -> fail "Can't get contacts"
+    
+createGroup :: ChatController -> GroupProfile -> IO GroupInfo
+createGroup cc groupProfile =
+  sendChatCmd cc (NewGroup False groupProfile) >>= \case
+    CRGroupCreated _ groupInfo -> return groupInfo
+    _ -> fail "Can't create group"
